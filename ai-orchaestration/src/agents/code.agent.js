@@ -1,29 +1,20 @@
 import "dotenv/config";
 import { createAgent, HumanMessage } from "langchain";
 import { ChatGroq } from "@langchain/groq";
+import { ChatMistralAI } from "@langchain/mistralai";
 import { listFiles, writeFiles, readFiles } from "./tools.js";
 
-const model = new ChatGroq({
-  model: "openai/gpt-oss-120b",
-  temperature: 0,
-  apiKey: process.env.GROQ_API_KEY,
+const model = new ChatMistralAI({
+  model: "mistral-medium-latest",
+  temperature: 0.7,
+  apiKey: process.env.MISTRAL_API_KEY,
 });
 
 const agent = createAgent({
   model: model,
   tools: [listFiles, writeFiles, readFiles],
+}).withConfig({
+  recursionLimit: 300,
 });
 
-const result = await agent.invoke(
-  {
-    messages: [
-      {
-        role: "user",
-        content: "Change the color theme of project from black to white",
-      },
-    ],
-  },
-  {
-    recursionLimit: 10,
-  },
-);
+export default agent;

@@ -1,5 +1,6 @@
 import express from "express"
 import morgan from "morgan"
+import agentRouter from "./routes/agent.routes.js";
 
 const app=express();
 
@@ -12,5 +13,7 @@ app.get("/api/ai/health", (req, res)=>{
         message: "Ai healthy route"
     })
 })
+
+app.use("/api/ai", agentRouter)
 
 export default app;
