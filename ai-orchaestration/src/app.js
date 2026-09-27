@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(morgan("dev"))
 
-app.get("/api/ai/healthz", (req, res)=>{
+app.get("/api/ai/health", (req, res)=>{
     res.status(200).json({
         message: "Ai healthy route"
     })

@@ -20,8 +20,9 @@ export const listFiles = tool(
   },
   {
     name: "list_files",
-    description:
-      "List all the files in the project directory. This is useful for understanding what files are available to work with.",
+    description: `List the files and directories available in the current project workspace.Use this tool ONLY when you need to discover the project structure or locate files relevant to the user's request. Call this tool once at the beginning of a task when the required file paths are unknown. After receiving the file list, use read_files to inspect the contents of relevant files. Do NOT call list_files again unless you specifically need
+    to refresh the project structure because files have been created, deleted, or renamed. Do not use this tool to read file contents. Do not repeatedly call this tool to verify the same file list.
+`,
     schema: z.object({}),
   },
 );
@@ -45,8 +46,23 @@ export const readFiles = tool(
   },
   {
     name: "read_files",
-    description:
-      "Read the contents of specified files. This is useful for understanding the content of files that are relevant to the task at hand.",
+    description: `
+    Read the contents of one or more files in the project workspace.
+
+    Use this tool AFTER list_files when you need to inspect the implementation
+    of files relevant to the user's request.
+
+    The file paths must come from list_files or from files that were created
+    during the current task.
+
+    Only read files that are relevant to the task. Do not read the entire
+    project unnecessarily.
+
+    If you already have the contents of a file from an earlier tool call,
+    do not read the same file again unless the file may have changed.
+
+    Do NOT use this tool to list files. Use list_files for discovering files.
+    `,
     schema: z.object({
       files: z
         .array(z.string())
@@ -75,8 +91,32 @@ export const writeFiles = tool(
   },
   {
     name: "update_files",
-    description:
-      "Update the contents of specified files. This is useful for making changes to files based on the requirements of the task at hand. this tool can also use to create new files by providing a new file name in the file field and the content to be added in the content field.",
+    description: `
+      Update or create files in the project workspace.
+
+      Use this tool ONLY after you have inspected the relevant files and determined
+      the exact changes required by the user's request.
+
+      Each file must contain its absolute path and its complete new content.
+
+      For an existing file:
+      1. Read the file using read_files.
+      2. Understand the existing implementation.
+      3. Modify the relevant parts while preserving unrelated functionality.
+      4. Send the complete updated file content to update_files.
+
+      For a new file:
+      - Provide the absolute path and complete content for the new file.
+
+      Do NOT use this tool merely to inspect files.
+      Do NOT call this tool before understanding the relevant file contents.
+      Do NOT overwrite unrelated files.
+      Do NOT repeatedly update the same file unless a previous change needs to
+      be corrected.
+
+      After successfully updating files, do not call list_files again unless you
+      need to verify that a new file was created or the project structure changed.
+      `,
     schema: z.object({
       files: z
         .array(
