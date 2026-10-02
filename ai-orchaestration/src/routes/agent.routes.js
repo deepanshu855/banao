@@ -1,11 +1,16 @@
 import { Router } from "express";
 import agent from "../agents/code.agent.js";
+import { model } from "../agents/code.agent.js";
 
 const agentRouter = Router();
 
 agentRouter.post("/invoke", async (req, res) => {
   try {
     const { message } = req.body;
+    console.log("Invoking agent with message:", message);
+
+    // const response1 = await model.invoke("Say Hello in one sentence");
+    // console.log(response1.content);
     const response = await agent.invoke({
       messages: [
         {

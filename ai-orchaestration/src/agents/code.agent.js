@@ -1,20 +1,19 @@
 import "dotenv/config";
 import { createAgent, HumanMessage } from "langchain";
-import { ChatGroq } from "@langchain/groq";
-import { ChatMistralAI } from "@langchain/mistralai";
-import { listFiles, writeFiles, readFiles } from "./tools.js";
+import { listFiles, readFiles, updateFiles, createFiles } from "./tools.js";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
-const model = new ChatMistralAI({
-  model: "mistral-medium-latest",
+export const model = new ChatGoogleGenerativeAI({
+  model: "gemini-3.5-flash",
   temperature: 0.7,
-  apiKey: process.env.MISTRAL_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 const agent = createAgent({
-  model: model,
-  tools: [listFiles, writeFiles, readFiles],
+  model,
+  tools: [listFiles, readFiles, updateFiles, createFiles],
 }).withConfig({
-  recursionLimit: 300,
+  recursionLimit: 20,
 });
 
 export default agent;

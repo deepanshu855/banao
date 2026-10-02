@@ -3,13 +3,13 @@ import { tool } from "langchain";
 import * as z from "zod";
 
 export const listFiles = tool(
-  async ({}) => {
+  async () => {
     console.log("--------------------------");
     console.log("Calling listFiles tool");
     console.log("--------------------------");
 
     const response = await axios.get(
-      "http://sandbox-service-01a0e358-699f-76f7-a1f2-083cce365576:3000/list-files",
+      "http://sandbox-service-01a0fb51-d180-76da-ad05-9ed80fad6a79:3000/list-files",
     );
 
     console.log("--------------------------");
@@ -20,9 +20,25 @@ export const listFiles = tool(
   },
   {
     name: "list_files",
-    description: `List the files and directories available in the current project workspace.Use this tool ONLY when you need to discover the project structure or locate files relevant to the user's request. Call this tool once at the beginning of a task when the required file paths are unknown. After receiving the file list, use read_files to inspect the contents of relevant files. Do NOT call list_files again unless you specifically need
-    to refresh the project structure because files have been created, deleted, or renamed. Do not use this tool to read file contents. Do not repeatedly call this tool to verify the same file list.
-`,
+    description: `
+    List all files and directories available in the current project workspace.
+
+    Use this tool when you need to discover the project structure or locate
+    files relevant to the user's request.
+
+    Workflow:
+    1. Call this tool once at the beginning of a task when the required file
+       paths are unknown.
+    2. Use the returned project-relative file paths with read_files to inspect
+       relevant files.
+    3. Do not call this tool again unless the project structure may have changed
+       because files were created, deleted, or renamed.
+
+    This tool only discovers files and directories. It does not read file
+    contents and does not modify files.
+
+    Do not repeatedly call this tool to verify the same project structure.
+  `,
     schema: z.object({}),
   },
 );
@@ -34,7 +50,7 @@ export const readFiles = tool(
     console.log("--------------------------");
 
     const response = await axios.get(
-      "http://sandbox-service-01a0e358-699f-76f7-a1f2-083cce365576:3000/read-files?files=" +
+      "http://sandbox-service-01a0fb51-d180-76da-ad05-9ed80fad6a79:3000/read-files?files=" +
         files.join(","),
     );
 
@@ -47,45 +63,54 @@ export const readFiles = tool(
   {
     name: "read_files",
     description: `
-    Read the contents of one or more files in the project workspace.
+    Read the contents of one or more files in the current project workspace.
 
-    Use this tool AFTER list_files when you need to inspect the implementation
-    of files relevant to the user's request.
+    Use this tool after list_files when you need to understand the existing
+    implementation before making changes.
 
-    The file paths must come from list_files or from files that were created
-    during the current task.
+    The file paths must be project-relative paths returned by list_files or
+    paths of files created during the current task.
 
-    Only read files that are relevant to the task. Do not read the entire
-    project unnecessarily.
+    Examples:
+    - src/App.jsx
+    - src/App.css
+    - src/components/Navbar.jsx
 
-    If you already have the contents of a file from an earlier tool call,
-    do not read the same file again unless the file may have changed.
+    Only read files that are relevant to the user's request. Do not read the
+    entire project unnecessarily.
 
-    Do NOT use this tool to list files. Use list_files for discovering files.
-    `,
+    If you already have the contents of a file from an earlier tool call and
+    the file has not changed, do not read it again.
+
+    Do not use this tool to discover files. Use list_files for that.
+
+    Do not modify files with this tool.
+  `,
     schema: z.object({
       files: z
         .array(z.string())
         .describe(
-          "The list of files absolute paths to read. These should be files that were listed using the list_files tool or created later",
+          "Project-relative paths of the files to read, such as src/App.jsx or src/App.css",
         ),
     }),
   },
 );
 
-export const writeFiles = tool(
-  async ({ files }) => {
+export const updateFiles = tool(
+  async ({ updates }) => {
     console.log("--------------------------");
-    console.log("Calling writeFiles tool");
+    console.log("Calling updateFiles tool");
     console.log("--------------------------");
 
     const response = await axios.patch(
-      "http://sandbox-service-01a0e358-699f-76f7-a1f2-083cce365576:3000/update-files",
-      { files },
+      "http://sandbox-service-01a0fb51-d180-76da-ad05-9ed80fad6a79:3000/update-files",
+      {
+        updates,
+      },
     );
 
     console.log("--------------------------");
-    console.log("Response from writeFiles tool" + response.data.results);
+    console.log("Response from updateFiles tool", response.data.results);
     console.log("--------------------------");
 
     return JSON.stringify(response.data.results);
@@ -93,46 +118,106 @@ export const writeFiles = tool(
   {
     name: "update_files",
     description: `
-      Update or create files in the project workspace.
+      Update existing files in the current project workspace.
 
-      Use this tool ONLY after you have inspected the relevant files and determined
-      the exact changes required by the user's request.
+      Use this tool ONLY when you need to modify files that already exist.
 
-      Each file must contain its absolute path and its complete new content.
+      Before updating an existing file:
+      1. Use list_files to discover the project structure if the file path is unknown.
+      2. Use read_files to inspect the existing file.
+      3. Understand the existing implementation.
+      4. Make only the changes required by the user's request.
+      5. Provide the complete new content of the file.
 
-      For an existing file:
-      1. Read the file using read_files.
-      2. Understand the existing implementation.
-      3. Modify the relevant parts while preserving unrelated functionality.
-      4. Send the complete updated file content to update_files.
+      File paths must be project-relative paths, for example:
+      - src/App.jsx
+      - src/App.css
+      - src/components/Navbar.jsx
 
-      For a new file:
-      - Provide the absolute path and complete content for the new file.
+      Do NOT use this tool to create new files.
+      Use create_files when a new file is required.
 
-      Do NOT use this tool merely to inspect files.
-      Do NOT call this tool before understanding the relevant file contents.
-      Do NOT overwrite unrelated files.
-      Do NOT repeatedly update the same file unless a previous change needs to
-      be corrected.
+      Do NOT update unrelated files.
+      Do NOT repeatedly update the same file unless a previous change
+      needs to be corrected.
 
-      After successfully updating files, do not call list_files again unless you
-      need to verify that a new file was created or the project structure changed.
-      `,
+      Each update must contain:
+      - file: project-relative path
+      - content: complete new file content
+    `,
     schema: z.object({
-      files: z
-        .array(
-          z.object({
-            file: z
-              .string()
-              .describe("The absolute path of the file to update"),
-            content: z
-              .string()
-              .describe(
-                "The new content for the file, the content should support json format.",
-              ),
-          }),
-        )
-        .describe("The list of files to update and their new contents"),
+      updates: z.array(
+        z.object({
+          file: z
+            .string()
+            .describe(
+              "Project-relative path of an existing file, such as src/App.jsx",
+            ),
+          content: z.string().describe("Complete new content of the file"),
+        }),
+      ),
+    }),
+  },
+);
+
+export const createFiles = tool(
+  async ({ files }) => {
+    console.log("--------------------------");
+    console.log("Calling createFiles tool");
+    console.log("--------------------------");
+
+    const response = await axios.post(
+      "http://sandbox-service-01a0fb51-d180-76da-ad05-9ed80fad6a79:3000/create-files",
+      {
+        files,
+      },
+    );
+
+    console.log("--------------------------");
+    console.log("Response from createFiles tool", response.data.results);
+    console.log("--------------------------");
+
+    return JSON.stringify(response.data.results);
+  },
+  {
+    name: "create_files",
+    description: `
+      Create new files in the current project workspace.
+
+      Use this tool ONLY when a new file is required by the user's request.
+
+      Before creating a file:
+      1. Use list_files to understand the project structure.
+      2. Determine the appropriate project-relative path.
+      3. If necessary, use read_files to inspect related files so the new file
+         integrates correctly with the existing project.
+
+      File paths must be project-relative paths, for example:
+      - src/components/Hero.jsx
+      - src/components/Navbar.jsx
+      - src/components/Button.jsx
+
+      Do NOT use this tool to modify existing files.
+      Use update_files when an existing file needs to be changed.
+
+      Each file must contain:
+      - file: project-relative path of the new file
+      - content: complete content of the new file
+
+      Do not create unnecessary files.
+      Do not create a file if an existing file should be modified instead.
+    `,
+    schema: z.object({
+      files: z.array(
+        z.object({
+          file: z
+            .string()
+            .describe(
+              "Project-relative path of the new file, such as src/components/Hero.jsx",
+            ),
+          content: z.string().describe("Complete content of the new file"),
+        }),
+      ),
     }),
   },
 );
