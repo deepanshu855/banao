@@ -18,7 +18,7 @@ export const createService= async(sandboxId)=>{
             ports:[
                 {
                     name: "http",
-                    port: 5173,
+                    port: 80,
                     targetPort: 5173,
                     protocol: "TCP"
                 }, 

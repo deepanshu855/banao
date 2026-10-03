@@ -6,21 +6,39 @@ const agentRouter = Router();
 
 agentRouter.post("/invoke", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, projectID } = req.body;
     console.log("Invoking agent with message:", message);
 
-    // const response1 = await model.invoke("Say Hello in one sentence");
-    // console.log(response1.content);
-    const response = await agent.invoke({
-      messages: [
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    });
+    // 1. Set SSE-specific HTTP headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
 
-    res.json(response);
+    const response = await agent.stream(
+      {
+        messages: [
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+      },
+      {
+        context: {
+          projectID: projectID,
+        },
+        streamMode: "custom",
+      },
+    );
+
+    for await (const chunk of response) {
+      console.log(chunk);
+      res.write(`data: ${chunk}\n\n`);
+    }
+
+    res.write(`event: done\ndata: {}\n\n`);
+
+    res.end();
   } catch (error) {
     console.error(`Error in invoking agent: ${error.message}`);
 

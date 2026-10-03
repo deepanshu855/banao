@@ -2,21 +2,17 @@ import axios from "axios";
 import { tool } from "langchain";
 import * as z from "zod";
 
-const SANDBOX_URL =
-  "http://sandbox-service-01a0fcbc-22c9-714d-81d5-15110c488a9e:3000";
-
 // LIST FILES
 export const listFiles = tool(
-  async () => {
-    console.log("--------------------------");
-    console.log("Calling listFiles tool");
-    console.log("--------------------------");
+  async ({}, config) => {
+    const writer = config.writer;
+    writer(`Listing files in project directory...\n`);
 
-    const response = await axios.get(`${SANDBOX_URL}/list-files`);
+    const response = await axios.get(
+      `http://sandbox-service-${config.context.projectID}:3000/list-files`,
+    );
 
-    console.log("--------------------------");
-    console.log("Files:", response.data.files);
-    console.log("--------------------------");
+    writer(`Files listed successfully. ${JSON.stringify(response.data.files)}`);
 
     return JSON.stringify(response.data.files);
   },
@@ -43,18 +39,15 @@ Returned paths are project-relative (e.g. src/App.jsx).
 
 // READ FILES
 export const readFiles = tool(
-  async ({ files }) => {
-    console.log("--------------------------");
-    console.log("Calling readFiles tool");
-    console.log("--------------------------");
+  async ({ files }, config) => {
+    const writer = config.writer;
+    writer(`Reading files in project directory... ${files.join(", ")}\n`);
 
     const response = await axios.get(
-      `${SANDBOX_URL}/read-files?files=${files.join(",")}`,
+      `http://sandbox-service-${config.context.projectID}:3000/read-files?files=${files.join(",")}`,
     );
 
-    console.log("--------------------------");
-    console.log("Read files:", files);
-    console.log("--------------------------");
+    writer(`Files read successfully. ${JSON.stringify(response.data)}`);
 
     return JSON.stringify(response.data);
   },
@@ -92,18 +85,18 @@ Examples: src/App.jsx, src/index.css, src/components/Navbar.jsx
 
 // UPDATE / CREATE FILES
 export const updateFiles = tool(
-  async ({ updates }) => {
-    console.log("--------------------------");
-    console.log("Calling updateFiles tool");
-    console.log("--------------------------");
+  async ({ updates }, config) => {
+    const writer = config.writer;
+    writer(`Updating files... ${JSON.stringify(updates)}\n`);
 
-    const response = await axios.patch(`${SANDBOX_URL}/update-files`, {
-      updates,
-    });
+    const response = await axios.patch(
+      `http://sandbox-service-${config.context.projectID}:3000/update-files`,
+      {
+        updates,
+      },
+    );
 
-    console.log("--------------------------");
-    console.log("Updated files:", response.data.results);
-    console.log("--------------------------");
+    writer(`Files updated successfully. ${JSON.stringify(response.data.results)}`);
 
     return JSON.stringify(response.data.results);
   },
