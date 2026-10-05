@@ -14,6 +14,8 @@ agentRouter.post("/invoke", async (req, res) => {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
+    const writer = (text) => res.write(text);
+
     const response = await agent.stream(
       {
         messages: [
@@ -26,6 +28,7 @@ agentRouter.post("/invoke", async (req, res) => {
       {
         context: {
           projectID: projectID,
+          writer,
         },
         streamMode: "custom",
       },
@@ -42,10 +45,14 @@ agentRouter.post("/invoke", async (req, res) => {
   } catch (error) {
     console.error(`Error in invoking agent: ${error.message}`);
 
-    res.status(500).json({
-      error: "Failed to invoke agent",
-      message: error.message,
-    });
+    if (res.headersSent) {
+      res.end();
+    } else {
+      res.status(500).json({
+        error: "Failed to invoke agent",
+        message: error.message,
+      });
+    }
   }
 });
 

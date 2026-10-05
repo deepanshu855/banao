@@ -1,6 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import { createProxyMiddleware } from "http-proxy-middleware";
+import { createProxyServer } from 'httpxy';
 import http from 'http';
 
 const app = express();
@@ -23,7 +24,6 @@ function getProxy(sandboxId) {
         proxies[ sandboxId ] = createProxyMiddleware({
             target,
             changeOrigin: true,
-            ws: true,
         });
     }
     return proxies[ sandboxId ];
@@ -35,7 +35,6 @@ function getAgentProxy(sandboxId) {
         agentProxies[ sandboxId ] = createProxyMiddleware({
             target,
             changeOrigin: true,
-            ws: true,
         });
     }
     return agentProxies[ sandboxId ];
@@ -55,8 +54,12 @@ app.use((req, res, next) => {
 // Create the HTTP server explicitly
 const server = http.createServer(app);
 
+const wsProxy = createProxyServer({ changeOrigin: true });
+wsProxy.on('error', (err, req, socket) => { socket?.destroy(); });
+
 // ✅ Handle WebSocket upgrades — this is what was missing
 server.on('upgrade', (req, socket, head) => {
+    socket.on('error', () => socket.destroy());
     const host = req.headers.host;
     const sandboxId = host.split('.')[ 0 ];
     const type = host.split('.')[ 1 ];
@@ -64,11 +67,11 @@ server.on('upgrade', (req, socket, head) => {
     console.log(`WS upgrade request: ${host}, sandboxId: ${sandboxId}, type: ${type}`);
 
     if (type === 'agent') {
-        const proxy = getAgentProxy(sandboxId);
-        proxy.upgrade(req, socket, head);
+        wsProxy.ws(req, socket, { target: `http://sandbox-service-${sandboxId}:3000` }, head)
+          .catch(() => socket.destroy());
     } else if (type === 'preview') {
-        const proxy = getProxy(sandboxId);
-        proxy.upgrade(req, socket, head);
+        wsProxy.ws(req, socket, { target: `http://sandbox-service-${sandboxId}` }, head)
+          .catch(() => socket.destroy());
     } else {
         socket.destroy();
     }
