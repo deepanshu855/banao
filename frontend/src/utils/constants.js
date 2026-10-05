@@ -5,7 +5,7 @@ export const PREVIEW_HOST_TEMPLATE = 'http://__SANDBOX_ID__.preview.localhost';
 export const TERMINAL_EVENTS = {
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
-  INPUT: 'input',
-  OUTPUT: 'output',
-  RESIZE: 'resize'
+  INPUT: 'terminal-input',
+  OUTPUT: 'terminal-output',
+  RESIZE: 'terminal-resize'
 };

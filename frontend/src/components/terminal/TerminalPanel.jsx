@@ -14,7 +14,7 @@ export function TerminalPanel() {
   const xtermRef = useRef(null);
 
   useEffect(() => {
-    if (!isTerminalOpen || !sandboxId || !terminalRef.current) return;
+    if (!sandboxId || !terminalRef.current) return;
 
     if (!xtermRef.current) {
       xtermRef.current = new Terminal({
@@ -40,9 +40,13 @@ export function TerminalPanel() {
     }
 
     const handleResize = () => {
-      fitAddonRef.current.fit();
-      if (xtermRef.current) {
-        terminalService.resize(xtermRef.current.cols, xtermRef.current.rows);
+      try {
+        fitAddonRef.current.fit();
+        if (xtermRef.current) {
+          terminalService.resize(xtermRef.current.cols, xtermRef.current.rows);
+        }
+      } catch (e) {
+        // fit() might throw if terminal has no dimensions
       }
     };
     
@@ -55,8 +59,17 @@ export function TerminalPanel() {
     return () => {
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
+      
+      // We do not strictly need to disconnect terminalService here if we want to keep it alive
+      // across component re-renders (in StrictMode). However, if the component truly unmounts,
+      // it's safe to clean up.
+      if (xtermRef.current) {
+        xtermRef.current.dispose();
+        xtermRef.current = null;
+      }
+      terminalService.disconnect();
     };
-  }, [isTerminalOpen, sandboxId, terminalService]);
+  }, [sandboxId, terminalService]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -69,12 +82,9 @@ export function TerminalPanel() {
           {isTerminalOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
         </button>
       </div>
-      
-      {isTerminalOpen && (
-        <div className="flex-1 bg-surface p-2 overflow-hidden relative">
-          <div ref={terminalRef} className="absolute inset-0 p-2" />
-        </div>
-      )}
+      <div className="flex-1 bg-surface p-2 overflow-hidden relative">
+        <div ref={terminalRef} className="absolute inset-0 p-2" />
+      </div>
     </div>
   );
 }

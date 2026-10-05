@@ -65,10 +65,6 @@ const FileTreeNode = ({ node, level = 0 }) => {
 export function FileExplorer() {
   const { files, refreshFiles } = useFiles();
 
-  useEffect(() => {
-    refreshFiles();
-  }, [refreshFiles]);
-
   return (
     <div className="flex flex-col h-full bg-surface">
       <div className="h-12 border-b border-border-subtle flex items-center justify-between px-4 shrink-0 font-medium">

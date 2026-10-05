@@ -11,7 +11,7 @@ export function buildFileTree(paths) {
       if (!childNode) {
         childNode = {
           name: part,
-          path: '/' + parts.slice(0, index + 1).join('/'),
+          path: parts.slice(0, index + 1).join('/'),
           type: index === parts.length - 1 ? 'file' : 'directory',
           children: []
         };

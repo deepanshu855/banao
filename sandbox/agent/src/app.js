@@ -53,6 +53,14 @@ io.on("connection", (socket) => {
     ptyProcess.write(data);
   });
 
+  socket.on("terminal-resize", ({ cols, rows }) => {
+    try {
+      ptyProcess.resize(cols, rows);
+    } catch (e) {
+      console.error('Error resizing pty:', e);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`client disconnected: ${socket.id}`);
   });

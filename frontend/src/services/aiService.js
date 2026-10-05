@@ -10,6 +10,8 @@ import { API_BASE_URL } from '../utils/constants';
  */
 export function invokeAI(message, projectId, callbacks, abortController) {
   if (!projectId) throw new Error("sandboxId is missing");
+  let isDone = false;
+
   fetchEventSource(`${API_BASE_URL}/api/ai/invoke`, {
     method: 'POST',
     headers: {
@@ -26,7 +28,11 @@ export function invokeAI(message, projectId, callbacks, abortController) {
     },
     onmessage(msg) {
       if (msg.event === 'done') {
-        callbacks.onDone();
+        abortController.abort(); // Prevent fetchEventSource from retrying
+        if (!isDone) {
+          isDone = true;
+          callbacks.onDone();
+        }
         return;
       }
       
@@ -51,7 +57,10 @@ export function invokeAI(message, projectId, callbacks, abortController) {
       callbacks.onStep({ type, message: content, raw: text });
     },
     onclose() {
-      callbacks.onDone();
+      if (!isDone) {
+        isDone = true;
+        callbacks.onDone();
+      }
     },
     onerror(err) {
       callbacks.onError(err);

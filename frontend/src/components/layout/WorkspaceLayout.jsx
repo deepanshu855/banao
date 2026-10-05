@@ -40,18 +40,20 @@ export function WorkspaceLayout({ chatPanel, fileExplorer, mainArea, terminalPan
           </div>
 
           {/* Terminal */}
-          {isTerminalOpen && (
-            <>
-              {/* Vertical Resizer */}
+          <>
+            {isTerminalOpen && (
               <div 
                 className="h-1 cursor-row-resize hover:bg-primary/50 active:bg-primary transition-colors flex-shrink-0"
                 onMouseDown={(e) => terminalSize.startResizing(e, 'vertical')}
               />
-              <div style={{ height: terminalSize.size }} className="flex-shrink-0 border-t border-border-subtle bg-surface-raised flex flex-col">
-                {terminalPanel}
-              </div>
-            </>
-          )}
+            )}
+            <div 
+              style={{ height: isTerminalOpen ? terminalSize.size : 40 }} 
+              className="flex-shrink-0 border-t border-border-subtle bg-surface-raised flex flex-col transition-all duration-200 overflow-hidden"
+            >
+              {terminalPanel}
+            </div>
+          </>
         </div>
       </div>
     </div>

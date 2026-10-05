@@ -9,6 +9,11 @@ class TerminalService {
 
   connect(sandboxId, onOutput) {
     if (!sandboxId) throw new Error("sandboxId is missing");
+    
+    if (this.socket) {
+      this.disconnect();
+    }
+
     const url = getAgentBaseUrl(sandboxId);
     this.socket = io(url, {
       transports: ['websocket'],
