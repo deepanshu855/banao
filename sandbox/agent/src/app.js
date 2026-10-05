@@ -6,10 +6,15 @@ import fs from "fs";
 import path from "path";
 import pty from "node-pty";
 import os from "os";
+import cors from "cors"
 
 const WORKING_DIR = "/workspace";
 const app = express();
 const httpServer = http.createServer(app);
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+}))
 
 const io = new Server(httpServer, {
   cors: {

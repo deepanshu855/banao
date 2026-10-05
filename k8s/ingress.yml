@@ -3,53 +3,68 @@ kind: Ingress
 metadata:
   name: banao-ingress
   annotations:
-    # Timeouts for community ingress-nginx (value in seconds)
+    # Timeouts (seconds)
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "6000"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "6000"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "6000"
+
+    # SSE (/api/ai/invoke) and terminal: don't buffer, stream live
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+
+    # Sticky sessions (kept from your config)
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
+
+    # CORS: explicit origin, no wildcard
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:5173,http://127.0.0.1:5173"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization, Accept, Cache-Control, X-Requested-With"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
+    nginx.ingress.kubernetes.io/cors-max-age: "600"
   labels:
     app.kubernetes.io/name: banao-ingress
 spec:
   ingressClassName: nginx
   rules:
-  - http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: sandbox-service
-            port: 
-              number: 80
+    # Hostless rules merged into one block (longest prefix wins)
+    - http:
+        paths:
+          - pathType: Prefix
+            path: "/api/ai"
+            backend:
+              service:
+                name: ai-service
+                port:
+                  number: 80
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: sandbox-service
+                port:
+                  number: 80
 
-  - http:
-      paths:
-      - pathType: Prefix
-        path: "/api/ai"
-        backend:
-          service:
-            name: ai-service
-            port: 
-              number: 80
+    - host: "*.preview.localhost"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: router-service
+                port:
+                  number: 80
 
-  - host: "*.preview.localhost"
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: router-service
-            port:
-              number: 80
-
-  - host: "*.agent.localhost"
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: router-service
-            port:
-              number: 80
+    - host: "*.agent.localhost"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: router-service
+                port:
+                  number: 80

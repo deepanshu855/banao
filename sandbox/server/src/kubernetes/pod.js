@@ -5,7 +5,6 @@ export const createPod = async (sandboxId) => {
     metadata: {
       name: `sandbox-pod-${sandboxId}`,
       labels: {
-        app: "sandbox",
         sandboxId: sandboxId,
       },
     },
@@ -16,19 +15,19 @@ export const createPod = async (sandboxId) => {
           emptyDir: {},
         },
       ],
-      initContainers:[
+      initContainers: [
         {
           name: "init-container",
           image: "template",
           imagePullPolicy: "IfNotPresent",
-          command: ['sh', '-c', 'cp -r /workspace/. /seed/'],
-          volumeMounts:[
+          command: ["sh", "-c", "cp -r /workspace/. /seed/"],
+          volumeMounts: [
             {
               name: "workspace-volumes",
-              mountPath: "/seed"
-            }
-          ]
-        }
+              mountPath: "/seed",
+            },
+          ],
+        },
       ],
       containers: [
         {
