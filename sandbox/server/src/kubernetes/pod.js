@@ -51,6 +51,14 @@ export const createPod = async (sandboxId) => {
           imagePullPolicy: "IfNotPresent",
           name: "agent-container",
           ports: [{ containerPort: 3000, name: "http" }],
+          readinessProbe: {
+            httpGet: {
+              path: "/",
+              port: 3000,
+            },
+            initialDelaySeconds: 1,
+            periodSeconds: 2,
+          },
           resources: {
             limits: { cpu: "500m", memory: "1Gi" },
             requests: { cpu: "250m", memory: "512Mi" },
