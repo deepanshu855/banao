@@ -13,6 +13,14 @@ build:
       sync:
         infer:
           - "src/**"
+
+    - image: auth
+      context: auth
+      docker:
+        dockerfile: dockerfile
+      sync:
+        infer:
+          - "src/**"
     
     - image: sandbox
       context: sandbox/server
@@ -44,4 +52,6 @@ manifests:
     - k8s/ai-service.yml
     - k8s/ingress.yml
     - k8s/rbac.yml
+    - k8s/auth-deployment.yml
+    - k8s/auth-service.yml
   
