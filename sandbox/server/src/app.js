@@ -4,6 +4,7 @@ import { createPod } from "./kubernetes/pod.js";
 import { createService } from "./kubernetes/service.js";
 import { v7 as uuid } from "uuid";
 import { k8sCoreV1Api } from "./kubernetes/config.js";
+import { createSandboxkey } from "./configs/redis.js";
 
 const app = express();
 
@@ -27,7 +28,8 @@ const waitForPodReady = async (sandboxId, timeoutMs = 60000) => {
       const body = pod.body || pod; // Handle both cases just in case
 
       const isReady = body.status?.conditions?.some(
-        (condition) => condition.type === "Ready" && condition.status === "True"
+        (condition) =>
+          condition.type === "Ready" && condition.status === "True",
       );
 
       if (isReady) {
@@ -54,8 +56,12 @@ app.post("/api/sandbox/start", async (req, res) => {
   const sandboxId = uuid();
 
   try {
-    await Promise.all([createPod(sandboxId), createService(sandboxId)]);
-    
+    await Promise.all([
+      createPod(sandboxId),
+      createService(sandboxId),
+      createSandboxkey(sandboxId),
+    ]);
+
     // Wait until Kubernetes reports the pod is actually running and ready
     await waitForPodReady(sandboxId);
 
@@ -66,9 +72,9 @@ app.post("/api/sandbox/start", async (req, res) => {
     });
   } catch (error) {
     console.error("Failed to start sandbox:", error);
-    res.status(500).json({ 
-      message: "Failed to start sandbox", 
-      error: error.message 
+    res.status(500).json({
+      message: "Failed to start sandbox",
+      error: error.message,
     });
   }
 });
