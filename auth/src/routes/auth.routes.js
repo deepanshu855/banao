@@ -1,6 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
 import userModel from "../models/user.model.js";
+import { sendAuthNotification } from "../config/mq.js";
+import jwt from "jsonwebtoken";
 
 const authRouter = Router();
 
@@ -25,6 +27,13 @@ authRouter.get(
           avatar: photos[0].value,
         });
       }
+
+      await sendAuthNotification({
+        userId: user._id,
+        action: "google_login",
+        timestamp: new Date(),
+        email: emails[0].value,
+      });
 
       // Generate a JWT for the authenticated user
       const token = jwt.sign(
