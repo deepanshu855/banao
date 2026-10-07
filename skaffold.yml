@@ -14,13 +14,13 @@ build:
         infer:
           - "src/**"
 
-    - image: auth
-      context: auth
-      docker:
-        dockerfile: dockerfile
-      sync:
-        infer:
-          - "src/**"
+    # - image: auth
+    #   context: auth
+    #   docker:
+    #     dockerfile: dockerfile
+    #   sync:
+    #     infer:
+    #       - "src/**"
     
     - image: sandbox
       context: sandbox/server

@@ -14,11 +14,11 @@ export const createSandboxkey = async (sandboxId) => {
       status: "active",
     }),
     "EX",
-    120,
+    1200,
   );
 };
 
-subscriber.config("SET", "notify-keyspace-events", "EX");
+subscriber.config("SET", "notify-keyspace-events", "Ex");
 subscriber.subscribe("__keyevent@0__:expired");
 
 subscriber.on("message", async (channel, key) => {
