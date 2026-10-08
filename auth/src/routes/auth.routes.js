@@ -37,13 +37,13 @@ authRouter.get(
 
       // Generate a JWT for the authenticated user
       const token = jwt.sign(
-        { id: req.user.id, displayName: req.user.displayName },
+        { id: user._id },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn: "7h" },
       );
 
       res.cookie("token", token, { httpOnly: true });
-      res.redirect("/");
+      res.redirect("http://localhost:5173");
       // Send the token to the client
       res.json({ token });
     } catch (error) {
