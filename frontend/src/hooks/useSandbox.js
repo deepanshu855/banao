@@ -7,11 +7,11 @@ export function useSandbox() {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState(null);
 
-  const start = async () => {
+  const start = async (projectId) => {
     setIsStarting(true);
     setError(null);
     try {
-      const data = await apiStartSandbox();
+      const data = await apiStartSandbox(projectId);
       setSandboxId(data.sandboxId);
       if (setPreviewUrl) setPreviewUrl(data.previewUrl);
       return data;

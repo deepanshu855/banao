@@ -55,7 +55,7 @@ authRouter.post("/start", authMiddleware, async (req, res) => {
 
   try {
     await Promise.all([
-      createPod(sandboxId),
+      createPod(sandboxId, projectId),
       createService(sandboxId),
       createSandboxkey(sandboxId),
     ]);
@@ -80,7 +80,7 @@ authRouter.post("/start", authMiddleware, async (req, res) => {
 authRouter.post("/project", authMiddleware, async (req, res) => {
   const { title } = req.body;
 
-  console.log(title)
+  console.log(title);
 
   const newProject = await projectModel.create({
     user: req.user.id,
@@ -94,7 +94,10 @@ authRouter.post("/project", authMiddleware, async (req, res) => {
 });
 
 authRouter.get("/projects", authMiddleware, async (req, res) => {
-  const projects = await projectModel.find({ userId: req.user.id });
+  console.log(req.user.id);
+
+  const projects = await projectModel.find({ user: req.user.id });
+  console.log(projects);
 
   res.status(200).json({
     message: "Projects retrieved successfully",
