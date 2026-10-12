@@ -6,7 +6,7 @@ import { CodeViewer } from '../code/CodeViewer';
 import { useFiles } from '../../hooks/useFiles';
 import { cn } from '../../utils/cn';
 
-export function PreviewCodeTabs() {
+export function PreviewCodeTabs({ podReady = false }) {
   const [activeTab, setActiveTab] = useState('preview'); // 'preview' | 'code'
   const { activeFile } = useFiles();
 
@@ -37,7 +37,7 @@ export function PreviewCodeTabs() {
       
       <div className="flex-1 overflow-hidden relative">
         <div className={cn("absolute inset-0", activeTab === 'preview' ? "z-10" : "z-0 opacity-0 pointer-events-none")}>
-          <PreviewFrame />
+          <PreviewFrame podReady={podReady} />
         </div>
         <div className={cn("absolute inset-0 flex flex-col", activeTab === 'code' ? "z-10" : "z-0 opacity-0 pointer-events-none")}>
           <CodeTabs />
