@@ -5,12 +5,14 @@ export function useResizable(initialSize, minSize = 100, maxSize = 800) {
 
   const startResizing = useCallback((e, direction = 'horizontal') => {
     e.preventDefault();
-    const startPos = direction === 'horizontal' ? e.clientX : e.clientY;
+    const isHorizontal = direction === 'horizontal' || direction === 'horizontal-reverse';
+    const startPos = isHorizontal ? e.clientX : e.clientY;
     const startSize = size;
 
     const onMouseMove = (moveEvent) => {
-      const currentPos = direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY;
-      const delta = currentPos - startPos;
+      const currentPos = isHorizontal ? moveEvent.clientX : moveEvent.clientY;
+      const isReverse = direction === 'horizontal-reverse' || direction === 'vertical-reverse';
+      const delta = isReverse ? startPos - currentPos : currentPos - startPos;
       const newSize = Math.max(minSize, Math.min(maxSize, startSize + delta));
       setSize(newSize);
     };

@@ -43,14 +43,47 @@ authRouter.get(
       );
 
       res.cookie("token", token, { httpOnly: true });
-      res.redirect("http://localhost:5173");
-      // Send the token to the client
-      res.json({ token });
+      return res.redirect("http://localhost:5173/projects");
     } catch (error) {
       console.error("Error during Google authentication:", error);
-      res.redirect("/");
+      return res.redirect("/login?error=auth_failed");
     }
   },
 );
+
+authRouter.get("/me", async (req, res) => {
+  try {
+    const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      },
+    });
+  } catch (err) {
+    return res.status(401).json({ message: "Authentication failed", error: err.message });
+  }
+});
+
+authRouter.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  return res.status(200).json({ message: "Logged out successfully" });
+});
 
 export default authRouter;
