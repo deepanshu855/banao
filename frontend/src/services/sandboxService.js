@@ -8,9 +8,10 @@ import axiosClient from './axiosClient';
 export async function startSandbox(projectId) {
   const response = await axiosClient.post('/api/sandbox/start', { projectId });
   const data = response.data;
-  if (!data.sandboxId || !data.previewUrl) {
-    throw new Error('Invalid response from start API: missing sandboxId or previewUrl');
+  if (!data.sandboxId) {
+    throw new Error('Invalid response from start API: missing sandboxId');
   }
+  // previewUrl is derived from sandboxId on the frontend if not provided
   return data;
 }
 

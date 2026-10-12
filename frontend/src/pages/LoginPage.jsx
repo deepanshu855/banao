@@ -3,14 +3,14 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import BanaoLogo from '../components/BanaoLogo';
 import GoogleButton from '../components/GoogleButton';
-import { Shield, Sparkles, Zap, Lock, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If already logged in, redirect straight to projects
+  // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const destination = location.state?.from?.pathname || '/projects';
@@ -19,100 +19,145 @@ export default function LoginPage() {
   }, [isAuthenticated, isLoading, navigate, location]);
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-[#e3e1e9] flex flex-col justify-between selection:bg-purple-500/30 selection:text-white relative overflow-hidden">
-      {/* Background radial atmosphere */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-violet-600/15 via-cyan-500/10 to-transparent blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-900/10 blur-[130px] pointer-events-none -z-10" />
-
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none -z-10" />
-
-      {/* Top Bar with Back Link */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0a0b',
+        color: '#f0eff4',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}
+    >
+      {/* Top bar */}
+      <header
+        style={{
+          padding: '20px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: 1200,
+          margin: '0 auto',
+          width: '100%',
+        }}
+      >
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs font-mono text-[#94a3b8] hover:text-white transition-colors bg-[#141724]/80 px-4 py-2 rounded-xl border border-[#272c3f]"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: '0.8125rem',
+            color: '#8a8a9a',
+            textDecoration: 'none',
+            transition: 'color 0.15s ease',
+            fontWeight: 500,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#f0eff4')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#8a8a9a')}
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Landing</span>
+          <ArrowLeft size={14} />
+          Back
         </Link>
 
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#141724] border border-[#272c3f] text-xs font-mono text-[#94a3b8]">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>OAuth 2.0 Secure Ingress</span>
-        </div>
+        <BanaoLogo size="sm" />
       </header>
 
-      {/* Main Login / Register Container with Ample Breathing Space */}
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12">
-        <div className="w-full max-w-md mx-auto">
-          {/* Main Neo-Glass Card */}
-          <div className="p-8 sm:p-12 rounded-3xl neo-glass-overlay border border-[#323850] shadow-[0_25px_70px_-20px_rgba(0,0,0,0.85)] flex flex-col items-center text-center relative overflow-hidden">
-            {/* Subtle card top glowing border */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#8b5cf6] to-transparent opacity-60" />
+      {/* Main content */}
+      <main
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 360 }}>
+          {/* Logo & heading */}
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <BanaoLogo size="lg" to={null} className="justify-center mb-6" />
 
-            {/* Brand Logo in Hindi with Ample Breathing Room */}
-            <div className="mb-8">
-              <BanaoLogo size="lg" showTagline />
-            </div>
-
-            {/* Title & Description */}
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Welcome to Banao
+            <h1
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                letterSpacing: '-0.04em',
+                color: '#f0eff4',
+                marginTop: 24,
+                marginBottom: 8,
+              }}
+            >
+              Welcome back
             </h1>
-
-            <p className="mt-3 text-sm text-[#94a3b8] leading-relaxed max-w-xs">
-              Sign in to launch your autonomous sandbox and access your existing projects.
+            <p style={{ fontSize: '0.875rem', color: '#8a8a9a', lineHeight: 1.6 }}>
+              Sign in to create and manage your projects.
             </p>
+          </div>
 
-            {/* ONLY Google Authentication Option */}
-            <div className="mt-10 w-full">
-              <GoogleButton
-                text="Continue with Google"
-                onSuccessRedirect="/projects"
-                className="py-4 text-base"
-              />
-            </div>
+          {/* Sign-in card */}
+          <div
+            style={{
+              background: '#111114',
+              border: '1px solid #26262e',
+              borderRadius: 12,
+              padding: '28px 24px',
+            }}
+          >
+            <GoogleButton
+              text="Continue with Google"
+              onSuccessRedirect="/projects"
+              showDevOption={true}
+            />
 
-            {/* Security Guarantee Pill */}
-            <div className="mt-8 pt-8 border-t border-[#272c3f] w-full flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#94a3b8]">
-                <Shield className="w-4 h-4 text-emerald-400" />
-                <span>Zero password storage • 100% Google verified</span>
-              </div>
-
-              <p className="text-[11px] text-[#64748b] leading-tight">
-                By continuing, you agree to the Terms of Service & Privacy Protocol of Banao.
+            <div
+              style={{
+                marginTop: 24,
+                paddingTop: 20,
+                borderTop: '1px solid #1e1e26',
+                textAlign: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#55555f',
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                By continuing you agree to our{' '}
+                <span style={{ color: '#8a8a9a' }}>Terms of Service</span> and{' '}
+                <span style={{ color: '#8a8a9a' }}>Privacy Policy</span>.
               </p>
             </div>
           </div>
 
-          {/* Quick Value Props below Card with generous breathing room */}
-          <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-            <div className="p-3 rounded-xl bg-[#141724]/60 border border-[#272c3f] flex flex-col items-center">
-              <Sparkles className="w-4 h-4 text-[#8b5cf6] mb-1" />
-              <span className="text-[11px] text-white font-medium">1,000 Credits</span>
-              <span className="text-[10px] text-[#94a3b8]">Free Every Month</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#141724]/60 border border-[#272c3f] flex flex-col items-center">
-              <Zap className="w-4 h-4 text-[#38bdf8] mb-1" />
-              <span className="text-[11px] text-white font-medium">Instant Pod</span>
-              <span className="text-[10px] text-[#94a3b8]">K8s Isolation</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#141724]/60 border border-[#272c3f] flex flex-col items-center">
-              <Lock className="w-4 h-4 text-emerald-400 mb-1" />
-              <span className="text-[11px] text-white font-medium">Auto-Saving</span>
-              <span className="text-[10px] text-[#94a3b8]">State Persisted</span>
-            </div>
-          </div>
+          {/* Reassurance line */}
+          <p
+            style={{
+              fontSize: '0.78rem',
+              color: '#55555f',
+              textAlign: 'center',
+              marginTop: 20,
+              letterSpacing: '0.01em',
+            }}
+          >
+            No password · Secured by Google OAuth 2.0
+          </p>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-6 text-center text-xs text-[#64748b]">
-        © {new Date().getFullYear()} Banao (बनाओ) AI • All rights reserved
+      <footer
+        style={{
+          padding: '20px 24px',
+          textAlign: 'center',
+        }}
+      >
+        <p style={{ fontSize: '0.75rem', color: '#55555f', margin: 0 }}>
+          © {new Date().getFullYear()} Banāo. All rights reserved.
+        </p>
       </footer>
     </div>
   );

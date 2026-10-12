@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSandbox } from '../hooks/useSandbox';
 import { useFiles } from '../hooks/useFiles';
@@ -7,61 +7,80 @@ import { ChatPanel } from '../components/chat/ChatPanel';
 import { FileExplorer } from '../components/explorer/FileExplorer';
 import { PreviewCodeTabs } from '../components/layout/PreviewCodeTabs';
 import { TerminalPanel } from '../components/terminal/TerminalPanel';
-import { Loader2 } from 'lucide-react';
 
 export default function WorkspacePage() {
   const { sandboxId: urlSandboxId } = useParams();
-  const { sandboxId, setSandboxId, start, isStarting } = useSandbox();
+  const { sandboxId, setSandboxId } = useSandbox();
   const { refreshFiles } = useFiles();
   const navigate = useNavigate();
+
+  // true once the pod has responded to at least one successful /list-files
+  const [podReady, setPodReady] = useState(false);
+  // true only if we can confirm the sandbox is permanently gone (e.g. no sandboxId at all)
   const [stale, setStale] = useState(false);
 
+  // Sync sandboxId from URL param into context
   useEffect(() => {
-    if (stale) return; // Don't resync if marked as stale
     if (urlSandboxId && urlSandboxId !== sandboxId) {
       setSandboxId(urlSandboxId);
     } else if (!urlSandboxId && !sandboxId) {
       navigate('/');
     }
-  }, [urlSandboxId, sandboxId, setSandboxId, navigate, stale]);
+  }, [urlSandboxId, sandboxId, setSandboxId, navigate]);
 
+  // Poll /list-files every 1 s until the pod responds successfully
   useEffect(() => {
-    if (sandboxId) {
-      refreshFiles().then(success => {
-        if (success === false) {
-          setStale(true);
-          setSandboxId(null);
-        } else {
-          setStale(false);
+    if (!sandboxId || podReady) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      while (!cancelled) {
+        const success = await refreshFiles();
+        if (success === true) {
+          if (!cancelled) setPodReady(true);
+          return;
         }
-      });
-    }
-  }, [sandboxId, refreshFiles, setSandboxId]);
+        // Wait 1 second before next attempt
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sandboxId, podReady, refreshFiles]);
 
   if (stale) {
     return (
-      <div className="h-screen bg-surface-dim flex flex-col items-center justify-center text-text-muted gap-4">
-        <p className="text-xl font-medium">Sandbox not found or expired</p>
-        <button 
-          onClick={() => {
-            setStale(false);
-            navigate('/');
-          }}
-          className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 font-medium shadow-[0_0_16px_rgba(139,92,246,0.3)]"
+      <div className="h-screen bg-[#0a0a0b] flex flex-col items-center justify-center gap-4" style={{ color: '#8a8a9a' }}>
+        <p style={{ fontSize: '1.125rem', fontWeight: 600, color: '#f0eff4' }}>Sandbox not found or expired</p>
+        <button
+          onClick={() => { setStale(false); navigate('/projects'); }}
+          className="btn-primary"
+          style={{ padding: '10px 20px' }}
         >
-          Return to Dashboard
+          Return to Projects
         </button>
       </div>
     );
   }
 
-  if (!sandboxId) return <div className="h-screen bg-surface-dim flex items-center justify-center text-text-muted">Loading Workspace...</div>;
+  if (!sandboxId) {
+    return (
+      <div className="h-screen bg-[#0a0a0b] flex items-center justify-center" style={{ color: '#8a8a9a', fontSize: '0.875rem' }}>
+        Loading workspace…
+      </div>
+    );
+  }
 
   return (
     <WorkspaceLayout
       chatPanel={<ChatPanel />}
-      fileExplorer={<FileExplorer />}
-      mainArea={<PreviewCodeTabs />}
+      fileExplorer={<FileExplorer podReady={podReady} />}
+      mainArea={<PreviewCodeTabs podReady={podReady} />}
       terminalPanel={<TerminalPanel />}
     />
   );

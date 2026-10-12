@@ -11,15 +11,12 @@ import {
   Play,
   Loader2,
   Calendar,
-  Sparkles,
   LogOut,
-  ExternalLink,
   Code2,
   Trash2,
-  Boxes,
   X,
   AlertCircle,
-  Filter,
+  ArrowRight,
 } from 'lucide-react';
 
 export default function ProjectsPage() {
@@ -32,20 +29,11 @@ export default function ProjectsPage() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // New Project Modal State
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('Blank Canvas');
   const [isCreating, setIsCreating] = useState(false);
 
-  const starterTemplates = [
-    { id: 'blank', name: 'Blank Canvas', desc: 'Minimal Vite + React 19 scratchpad', icon: Code2 },
-    { id: 'fintech', name: 'Fintech Treasury', desc: 'Real-time WebSocket market streams & charts', icon: Boxes },
-    { id: 'saas', name: 'SaaS Platform', desc: 'Tailwind v4 multi-page dashboard & data grid', icon: Sparkles },
-    { id: 'voice', name: 'AI Voice Studio', desc: 'Audio streaming and Gemini speech hooks', icon: Play },
-  ];
-
-  // Fetch projects on mount
   useEffect(() => {
     loadProjects();
   }, []);
@@ -58,35 +46,29 @@ export default function ProjectsPage() {
       if (data && data.projects && data.projects.length > 0) {
         setProjects(data.projects);
       } else {
-        // If DB is empty, provide a clean seed project for elegant showcase
-        const seedProjects = [
+        setProjects([
           {
             _id: 'proj_banao_demo_01',
-            title: 'Banao Kinetic IDE Core',
+            title: 'Banāo Studio Core',
             createdAt: new Date().toISOString(),
-            template: 'Fintech Treasury',
-            tags: ['React 19', 'Tailwind v4', 'WebSockets'],
+            tags: ['React', 'Tailwind', 'Vite'],
           },
           {
             _id: 'proj_banao_demo_02',
-            title: 'AI Multi-Agent Studio',
+            title: 'AI Landing Page',
             createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-            template: 'SaaS Platform',
-            tags: ['Node.js', 'Express', 'Vite'],
+            tags: ['React', 'Framer'],
           },
-        ];
-        setProjects(seedProjects);
+        ]);
       }
     } catch (err) {
-      console.warn('Backend getProjects returned error, using local fallback state:', err);
-      // Fallback state for local dev
+      console.warn('getProjects error, using fallback:', err);
       setProjects([
         {
           _id: 'proj_banao_demo_01',
-          title: 'Banao Kinetic IDE Core',
+          title: 'Banāo Studio Core',
           createdAt: new Date().toISOString(),
-          template: 'Fintech Treasury',
-          tags: ['React 19', 'Tailwind v4'],
+          tags: ['React', 'Tailwind'],
         },
       ]);
     } finally {
@@ -102,26 +84,22 @@ export default function ProjectsPage() {
       setIsCreating(true);
       setError(null);
 
-      let createdProject = null;
+      let created = null;
       try {
         const response = await createProject(newTitle.trim());
-        if (response && response.project) {
-          createdProject = response.project;
-        }
+        if (response?.project) created = response.project;
       } catch (err) {
-        console.warn('Backend createProject error, persisting locally in session:', err);
-        // Fallback local mock project
-        createdProject = {
+        console.warn('createProject error, using local fallback:', err);
+        created = {
           _id: 'proj_' + Math.random().toString(36).substring(2, 9),
           title: newTitle.trim(),
           createdAt: new Date().toISOString(),
-          template: selectedTemplate,
-          tags: ['Vite', 'React 19', 'Tailwind'],
+          tags: ['React', 'Vite', 'Tailwind'],
         };
       }
 
-      if (createdProject) {
-        setProjects((prev) => [createdProject, ...prev]);
+      if (created) {
+        setProjects((prev) => [created, ...prev]);
         setNewTitle('');
         setIsModalOpen(false);
       }
@@ -139,9 +117,8 @@ export default function ProjectsPage() {
         navigate(`/workspace/${data.sandboxId}`);
       }
     } catch (err) {
-      console.warn('Kubernetes start pod error (running standalone preview):', err);
-      // Fallback workspace link for development preview if k8s cluster is not connected
-      navigate(`/workspace/local-dev-sandbox`);
+      console.warn('Sandbox start error, navigating to local dev:', err);
+      navigate('/workspace/local-dev-sandbox');
     }
   };
 
@@ -152,368 +129,674 @@ export default function ProjectsPage() {
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects;
-    return projects.filter((p) =>
-      p.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return projects.filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [projects, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-[#e3e1e9] flex flex-col selection:bg-purple-500/30 selection:text-white relative">
-      {/* Subtle ambient glows */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[350px] bg-violet-600/10 blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute bottom-10 left-10 w-[500px] h-[300px] bg-cyan-600/10 blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none -z-10" />
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0a0b',
+        color: '#f0eff4',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}
+    >
+      {/* ── Header ─────────────────────────────────── */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          background: 'rgba(10, 10, 11, 0.9)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid #1e1e26',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '0 24px',
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <BanaoLogo size="md" />
 
-      {/* Top Header Bar with Ample Breathing Space */}
-      <header className="sticky top-0 z-40 bg-[#090a0f]/85 backdrop-blur-xl border-b border-[#272c3f]/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Brand Logo in Hindi */}
-          <div className="flex items-center gap-6">
-            <BanaoLogo size="md" />
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-[#141724] border border-[#272c3f] text-xs font-mono text-[#94a3b8]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>K8s Engine Connected</span>
-            </div>
-          </div>
-
-          {/* User Profile & Actions */}
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#141724] border border-[#272c3f] text-xs font-mono text-[#94a3b8]">
-              <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
-              <span className="text-white font-medium">1,000 / 1,000</span>
-              <span>credits</span>
-            </div>
-
-            <div className="flex items-center gap-3 pl-3 border-l border-[#272c3f]">
-              {user?.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name || 'User'}
-                  className="w-9 h-9 rounded-full border border-[#8b5cf6]/50 object-cover shadow-sm"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 text-white flex items-center justify-center font-bold text-sm">
-                  {user?.name?.[0] || 'U'}
-                </div>
-              )}
-
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-semibold text-white leading-tight">
-                  {user?.name || 'Developer'}
-                </span>
-                <span className="text-[10px] text-[#94a3b8] font-mono leading-tight">
-                  {user?.email || 'google-user'}
-                </span>
-              </div>
-
-              <button
-                onClick={logout}
-                title="Log Out"
-                className="p-2 rounded-xl text-[#94a3b8] hover:text-rose-400 hover:bg-[#141724] border border-transparent hover:border-[#323850] transition-colors cursor-pointer ml-1"
+          {/* Right: user + logout */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name || 'User'}
+                style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '1px solid #26262e' }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  background: '#7c5cfc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#fff',
+                  flexShrink: 0,
+                }}
               >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                {user?.name?.[0] || 'U'}
+              </div>
+            )}
+
+            <span
+              style={{
+                fontSize: '0.8125rem',
+                color: '#8a8a9a',
+                fontWeight: 500,
+                display: 'none',
+              }}
+              className="hidden sm:block"
+            >
+              {user?.name || 'Developer'}
+            </span>
+
+            <button
+              onClick={logout}
+              title="Sign out"
+              style={{
+                padding: 6,
+                background: 'transparent',
+                border: 'none',
+                color: '#55555f',
+                cursor: 'pointer',
+                display: 'flex',
+                borderRadius: 6,
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#55555f')}
+            >
+              <LogOut size={15} />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 flex flex-col">
-        {/* Error notification banner if any */}
+      {/* ── Main ───────────────────────────────────── */}
+      <main
+        style={{
+          flex: 1,
+          maxWidth: 1200,
+          width: '100%',
+          margin: '0 auto',
+          padding: '48px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Error banner */}
         {(error || sandboxError) && (
-          <div className="mb-8 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400" />
-            <div className="flex-1">{error || sandboxError}</div>
-            <button onClick={() => setError(null)} className="text-xs underline text-rose-400">
+          <div
+            style={{
+              marginBottom: 24,
+              padding: '12px 16px',
+              borderRadius: 8,
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              color: '#fca5a5',
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <AlertCircle size={15} style={{ flexShrink: 0, color: '#f87171' }} />
+            <span style={{ flex: 1 }}>{error || sandboxError}</span>
+            <button
+              onClick={() => setError(null)}
+              style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}
+            >
               Dismiss
             </button>
           </div>
         )}
 
-        {/* Dashboard Title & Actions Bar with Ample Breathing Room */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-[#272c3f]">
+        {/* Title row */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 16,
+            marginBottom: 36,
+            paddingBottom: 28,
+            borderBottom: '1px solid #1e1e26',
+          }}
+        >
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="font-devanagari text-2xl font-bold text-[#8b5cf6] tracking-wide">
-                बनाओ
-              </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#1e2235] text-[#38bdf8] border border-[#38bdf8]/30">
-                Workspaces
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Projects Dashboard
+            <h1
+              style={{
+                fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.04em',
+                color: '#f0eff4',
+                marginBottom: 4,
+              }}
+            >
+              Projects
             </h1>
-            <p className="text-sm sm:text-base text-[#94a3b8] mt-1.5 font-sans">
-              Create and manage your autonomous full-stack development sandboxes.{' '}
-              <span className="font-devanagari text-[#e3e1e9]">"सोचो और बनाओ"</span>
+            <p style={{ fontSize: '0.875rem', color: '#8a8a9a' }}>
+              Create and manage your React workspaces.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="btn-primary-gradient px-5 py-3 rounded-xl text-sm font-semibold text-white flex items-center gap-2.5 shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create New Project</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="btn-primary"
+            style={{ flexShrink: 0 }}
+          >
+            <Plus size={15} />
+            New project
+          </button>
         </div>
 
-        {/* Search and Filters Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-          <div className="relative w-full sm:w-96">
-            <Search className="w-4 h-4 text-[#94a3b8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* Search + count */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 24,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: 320, width: '100%' }}>
+            <Search
+              size={14}
+              style={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#55555f',
+                pointerEvents: 'none',
+              }}
+            />
             <input
               type="text"
-              placeholder="Search existing projects..."
+              placeholder="Search projects…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#141724] border border-[#272c3f] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] transition-colors"
+              className="input"
+              style={{ paddingLeft: 36, maxWidth: '100%' }}
             />
           </div>
 
-          <div className="text-xs font-mono text-[#94a3b8] self-end sm:self-center">
-            Showing <span className="text-white font-bold">{filteredProjects.length}</span> project
-            {filteredProjects.length === 1 ? '' : 's'}
-          </div>
+          <span style={{ fontSize: '0.8rem', color: '#55555f', flexShrink: 0 }}>
+            {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
-        {/* Existing Projects Grid */}
+        {/* Project grid */}
         {isLoadingProjects ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[#8b5cf6]" />
-            <span className="text-sm font-mono text-[#94a3b8]">Loading existing projects...</span>
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 12,
+              padding: '80px 0',
+            }}
+          >
+            <Loader2 size={24} style={{ color: '#7c5cfc', animation: 'spin 1s linear infinite' }} />
+            <span style={{ fontSize: '0.875rem', color: '#55555f' }}>Loading projects…</span>
           </div>
         ) : filteredProjects.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-2xl neo-glass border border-[#272c3f]">
-            <div className="w-16 h-16 rounded-2xl bg-[#141724] border border-[#323850] flex items-center justify-center text-[#8b5cf6] mb-4">
-              <FolderKanban className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-1">No Projects Found</h3>
-            <p className="text-sm text-[#94a3b8] max-w-sm mb-6">
-              {searchQuery
-                ? `No project matches "${searchQuery}". Clear search or create a new one.`
-                : 'You have not created any projects yet. Start by creating your first sandbox project!'}
-            </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="btn-primary-gradient px-6 py-3 rounded-xl text-sm font-medium text-white flex items-center gap-2"
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '80px 24px',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 10,
+                background: '#111114',
+                border: '1px solid #26262e',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+                color: '#55555f',
+              }}
             >
-              <Plus className="w-4 h-4" />
-              <span>Create Project Now</span>
-            </button>
+              <FolderKanban size={22} />
+            </div>
+            <h3
+              style={{
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: '#f0eff4',
+                marginBottom: 6,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {searchQuery ? `No results for "${searchQuery}"` : 'No projects yet'}
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: '#55555f', marginBottom: 24 }}>
+              {searchQuery
+                ? 'Try a different search term.'
+                : 'Create your first project to get started.'}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="btn-primary"
+              >
+                <Plus size={15} />
+                Create project
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: 12,
+            }}
+          >
             {filteredProjects.map((project) => (
-              <div
+              <ProjectCard
                 key={project._id}
-                onClick={() => handleOpenWorkspace(project._id)}
-                className="group relative p-6 rounded-2xl neo-glass border border-[#272c3f] hover:border-[#8b5cf6]/60 transition-all duration-300 flex flex-col justify-between hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)] cursor-pointer"
-              >
-                {/* Corner Tech Accent */}
-                <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#8b5cf6]/40 rounded-tr-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                <div>
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#0d0e15] border border-[#272c3f] flex items-center justify-center text-[#8b5cf6] group-hover:border-[#8b5cf6]/50 group-hover:bg-[#8b5cf6]/10 transition-colors">
-                      <Code2 className="w-5 h-5" />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Ready
-                      </span>
-
-                      <button
-                        onClick={(e) => handleDeleteProject(project._id, e)}
-                        title="Delete project"
-                        className="p-1.5 rounded-lg text-[#64748b] hover:text-rose-400 hover:bg-[#1e2235] transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-white group-hover:text-[#d0bcff] transition-colors line-clamp-1">
-                    {project.title}
-                  </h3>
-
-                  <p className="text-xs font-mono text-[#94a3b8] mt-2 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-[#64748b]" />
-                    <span>
-                      Created {new Date(project.createdAt || Date.now()).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </p>
-
-                  {/* Stack Tags */}
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {(project.tags || ['React 19', 'Vite', 'Tailwind']).map((t) => (
-                      <span
-                        key={t}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0d0e15] border border-[#272c3f] text-[#94a3b8]"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-[#272c3f] flex items-center justify-between">
-                  <span className="text-xs font-mono text-[#64748b]">ID: {project._id.substring(0, 8)}...</span>
-                  
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8b5cf6] group-hover:text-[#38bdf8] transition-colors">
-                    <span>Open in IDE</span>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                  </div>
-                </div>
-              </div>
+                project={project}
+                onOpen={() => handleOpenWorkspace(project._id)}
+                onDelete={(e) => handleDeleteProject(project._id, e)}
+              />
             ))}
-          </div>
-        )}
-
-        {/* Global Starting Indicator Modal Overlay */}
-        {isStarting && (
-          <div className="fixed inset-0 bg-[#090a0f]/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="p-8 rounded-2xl bg-[#141724] border border-[#323850] shadow-2xl flex flex-col items-center gap-4 max-w-sm text-center">
-              <Loader2 className="w-10 h-10 animate-spin text-[#8b5cf6]" />
-              <div>
-                <h4 className="text-base font-bold text-white">Spinning Up Sandbox Pod</h4>
-                <p className="text-xs text-[#94a3b8] mt-1">
-                  Allocating container environment and hot reload proxy...
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= NEW PROJECT MODAL ================= */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-[#090a0f]/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-lg rounded-3xl neo-glass-overlay border border-[#323850] shadow-2xl p-6 sm:p-8 relative">
-              {/* Close Button */}
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 p-2 rounded-xl text-[#94a3b8] hover:text-white hover:bg-[#1e2235] transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-2 mb-2">
-                <span className="font-devanagari text-xl font-bold text-[#8b5cf6]">बनाओ</span>
-                <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#1e2235] text-[#38bdf8] border border-[#38bdf8]/20">
-                  New Project
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                Create a New Project
-              </h2>
-              <p className="text-xs text-[#94a3b8] mt-1 mb-6">
-                Choose a title and architecture starter. Your project will be initialized in an isolated container.
-              </p>
-
-              <form onSubmit={handleCreateProject} className="space-y-6">
-                {/* Title Input */}
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#94a3b8] mb-2">
-                    Project Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoFocus
-                    placeholder="e.g., Algorithmic Crypto Treasury"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full bg-[#0d0e15] border border-[#272c3f] rounded-xl px-4 py-3 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#8b5cf6] transition-colors"
-                  />
-                </div>
-
-                {/* Template Selection */}
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#94a3b8] mb-2">
-                    Starter Blueprint
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {starterTemplates.map((tpl) => {
-                      const Icon = tpl.icon;
-                      const isSelected = selectedTemplate === tpl.name;
-                      return (
-                        <div
-                          key={tpl.id}
-                          onClick={() => setSelectedTemplate(tpl.name)}
-                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
-                            isSelected
-                              ? 'bg-[#8b5cf6]/15 border-[#8b5cf6] shadow-sm'
-                              : 'bg-[#0d0e15] border-[#272c3f] hover:border-[#323850]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon
-                              className={`w-4 h-4 ${isSelected ? 'text-[#8b5cf6]' : 'text-[#94a3b8]'}`}
-                            />
-                            <span className="text-xs font-semibold text-white">{tpl.name}</span>
-                          </div>
-                          <p className="text-[10px] text-[#94a3b8] leading-tight">{tpl.desc}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="pt-2 flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl text-sm font-medium text-[#94a3b8] hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={isCreating || !newTitle.trim()}
-                    className="btn-primary-gradient px-6 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(139,92,246,0.35)]"
-                  >
-                    {isCreating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Initializing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4" />
-                        <span>Create Project</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-[#272c3f] bg-[#0d0e15] py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748b]">
-          <div className="flex items-center gap-3">
-            <BanaoLogo size="sm" />
-            <span>— Autonomous AI App Builder</span>
+      {/* ── Loading overlay ─────────────────────────── */}
+      {isStarting && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 10, 11, 0.7)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+          }}
+        >
+          <div
+            style={{
+              padding: '32px 40px',
+              background: '#111114',
+              border: '1px solid #26262e',
+              borderRadius: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 16,
+              textAlign: 'center',
+              maxWidth: 320,
+            }}
+          >
+            <Loader2
+              size={28}
+              style={{ color: '#7c5cfc', animation: 'spin 1s linear infinite' }}
+            />
+            <div>
+              <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#f0eff4', marginBottom: 4 }}>
+                Starting sandbox
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#55555f' }}>
+                Setting up your isolated React environment…
+              </p>
+            </div>
           </div>
-          <div>All Kubernetes Pods Healthy • Ready for Execution</div>
         </div>
+      )}
+
+      {/* ── New Project Modal ──────────────────────── */}
+      {isModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 10, 11, 0.7)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: 24,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalOpen(false);
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 440,
+              background: '#111114',
+              border: '1px solid #26262e',
+              borderRadius: 12,
+              padding: '28px 24px',
+              position: 'relative',
+            }}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                padding: 6,
+                background: 'transparent',
+                border: 'none',
+                color: '#55555f',
+                cursor: 'pointer',
+                borderRadius: 6,
+                display: 'flex',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#f0eff4')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#55555f')}
+            >
+              <X size={16} />
+            </button>
+
+            <h2
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                letterSpacing: '-0.03em',
+                color: '#f0eff4',
+                marginBottom: 4,
+              }}
+            >
+              New project
+            </h2>
+            <p style={{ fontSize: '0.8125rem', color: '#55555f', marginBottom: 24 }}>
+              Give your project a name to get started.
+            </p>
+
+            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.78rem',
+                    fontWeight: 500,
+                    color: '#8a8a9a',
+                    marginBottom: 6,
+                    letterSpacing: '0.01em',
+                  }}
+                >
+                  Project name
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="e.g., My SaaS Landing Page"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="input"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn-ghost"
+                  style={{ padding: '9px 16px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreating || !newTitle.trim()}
+                  className="btn-primary"
+                  style={{ opacity: isCreating || !newTitle.trim() ? 0.5 : 1, cursor: isCreating || !newTitle.trim() ? 'not-allowed' : 'pointer' }}
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                      Creating…
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} />
+                      Create project
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Footer ─────────────────────────────────── */}
+      <footer
+        style={{
+          borderTop: '1px solid #1e1e26',
+          padding: '16px 24px',
+          maxWidth: 1200,
+          margin: '0 auto',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 8,
+        }}
+      >
+        <BanaoLogo size="sm" />
+        <span style={{ fontSize: '0.75rem', color: '#55555f' }}>
+          React · Vite · Isolated sandbox
+        </span>
       </footer>
+
+      {/* Spin keyframe */}
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
+}
+
+/* ── Project Card ────────────────────────────── */
+function ProjectCard({ project, onOpen, onDelete }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={onOpen}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '20px',
+        borderRadius: 10,
+        border: `1px solid ${hovered ? '#36363f' : '#26262e'}`,
+        background: hovered ? '#111114' : '#0e0e11',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        position: 'relative',
+        boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.3)' : 'none',
+      }}
+    >
+      {/* Top row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 8,
+            background: hovered ? 'rgba(124, 92, 252, 0.1)' : '#18181c',
+            border: `1px solid ${hovered ? 'rgba(124, 92, 252, 0.25)' : '#26262e'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Code2 size={15} style={{ color: hovered ? '#9d7fff' : '#55555f', transition: 'color 0.15s ease' }} />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '3px 8px',
+              borderRadius: 99,
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              color: '#34d399',
+            }}
+          >
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', display: 'block' }} />
+            Ready
+          </span>
+
+          <button
+            onClick={onDelete}
+            title="Delete project"
+            style={{
+              padding: 4,
+              background: 'transparent',
+              border: 'none',
+              color: '#55555f',
+              cursor: 'pointer',
+              borderRadius: 4,
+              display: 'flex',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.stopPropagation(); e.currentTarget.style.color = '#f87171'; }}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#55555f')}
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Title */}
+      <div>
+        <h3
+          style={{
+            fontSize: '0.9375rem',
+            fontWeight: 600,
+            color: '#f0eff4',
+            letterSpacing: '-0.02em',
+            marginBottom: 4,
+            lineHeight: 1.3,
+          }}
+        >
+          {project.title}
+        </h3>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            color: '#55555f',
+            fontSize: '0.75rem',
+          }}
+        >
+          <Calendar size={11} />
+          {new Date(project.createdAt || Date.now()).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+        {(project.tags || ['React', 'Vite', 'Tailwind']).map((tag) => (
+          <span
+            key={tag}
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              background: '#18181c',
+              border: '1px solid #26262e',
+              color: '#8a8a9a',
+              letterSpacing: '0.01em',
+            }}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Footer row */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingTop: 10,
+          borderTop: '1px solid #1e1e26',
+        }}
+      >
+        <span style={{ fontSize: '0.72rem', color: '#55555f', fontFamily: 'monospace' }}>
+          {project._id.substring(0, 10)}…
+        </span>
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            color: hovered ? '#9d7fff' : '#55555f',
+            transition: 'color 0.15s ease',
+          }}
+        >
+          Open IDE
+          <ArrowRight size={12} />
+        </div>
+      </div>
     </div>
   );
 }

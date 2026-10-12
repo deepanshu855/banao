@@ -2,143 +2,257 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BanaoLogo from './BanaoLogo';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, LogOut, FolderKanban, Menu, X, Sparkles } from 'lucide-react';
+import { FolderKanban, LogOut, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
+    setMobileOpen(false);
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#090a0f]/80 backdrop-blur-xl border-b border-[#272c3f]/80 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Left: Brand Hindi Logo & Status */}
-        <div className="flex items-center gap-6">
-          <BanaoLogo size="md" />
+    <nav
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        width: '100%',
+        background: 'rgba(10, 10, 11, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid #1e1e26',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: '0 24px',
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* Left: Logo */}
+        <BanaoLogo size="md" />
 
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#141724] border border-[#272c3f] text-xs font-mono text-[#94a3b8]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-            <span>v2.4 Engine Live</span>
-          </div>
+        {/* Center: Nav links (desktop) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 32,
+          }}
+          className="hidden lg:flex"
+        >
+          {[
+            { label: 'Features', href: '#features' },
+            { label: 'How it works', href: '#demo' },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#8a8a9a',
+                textDecoration: 'none',
+                transition: 'color 0.15s ease',
+                letterSpacing: '-0.01em',
+              }}
+              onMouseEnter={(e) => (e.target.style.color = '#f0eff4')}
+              onMouseLeave={(e) => (e.target.style.color = '#8a8a9a')}
+            >
+              {item.label}
+            </a>
+          ))}
         </div>
 
-        {/* Center: Nav links for landing page */}
-        <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-[#94a3b8]">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#demo" className="hover:text-white transition-colors">Architecture</a>
-          <a href="#templates" className="hover:text-white transition-colors">Templates</a>
-          <a href="#velocity" className="hover:text-white transition-colors">Benchmarks</a>
-        </div>
-
-        {/* Right: Auth Action Buttons */}
-        <div className="hidden sm:flex items-center gap-4">
+        {/* Right: Actions (desktop) */}
+        <div className="hidden sm:flex" style={{ alignItems: 'center', gap: 12 }}>
           {isAuthenticated ? (
-            <div className="flex items-center gap-4">
+            <>
               <Link
                 to="/projects"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-[#141724] hover:bg-[#1e2235] border border-[#323850] hover:border-[#8b5cf6]/50 transition-all shadow-sm"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  color: '#f0eff4',
+                  background: '#18181c',
+                  border: '1px solid #26262e',
+                  textDecoration: 'none',
+                  transition: 'border-color 0.15s ease',
+                  letterSpacing: '-0.01em',
+                }}
               >
-                <FolderKanban className="w-4 h-4 text-[#8b5cf6]" />
-                <span>My Projects</span>
+                <FolderKanban size={14} style={{ color: '#9d7fff' }} />
+                My Projects
               </Link>
 
-              <div className="flex items-center gap-3 pl-2 border-l border-[#272c3f]">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name || 'User'}
-                    className="w-8 h-8 rounded-full border border-[#8b5cf6]/40 object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 text-white flex items-center justify-center text-xs font-bold">
-                    {user?.name?.[0] || 'U'}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleLogout}
-                  title="Sign Out"
-                  className="p-2 rounded-lg text-[#94a3b8] hover:text-rose-400 hover:bg-[#1e2235] border border-transparent hover:border-[#323850] transition-all cursor-pointer"
+              {/* User avatar */}
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name || 'User'}
+                  style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '1px solid #26262e' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    background: '#7c5cfc',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#fff',
+                    flexShrink: 0,
+                  }}
                 >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-xl text-sm font-medium text-[#94a3b8] hover:text-white hover:bg-[#141724] border border-transparent hover:border-[#272c3f] transition-all"
-              >
-                Sign In
-              </Link>
+                  {user?.name?.[0] || 'U'}
+                </div>
+              )}
 
+              <button
+                onClick={handleLogout}
+                title="Sign out"
+                style={{
+                  padding: 6,
+                  borderRadius: 6,
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#55555f',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#55555f')}
+              >
+                <LogOut size={15} />
+              </button>
+            </>
+          ) : (
+            <>
               <Link
                 to="/login"
-                className="btn-primary-gradient px-5 py-2.5 rounded-xl text-sm font-medium text-white flex items-center gap-2 shadow-[0_0_20px_rgba(139,92,246,0.35)]"
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  color: '#8a8a9a',
+                  textDecoration: 'none',
+                  transition: 'color 0.15s ease',
+                  letterSpacing: '-0.01em',
+                }}
               >
-                <Sparkles className="w-4 h-4" />
-                <span>Continue with Google</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
+                Sign in
               </Link>
-            </div>
+              <Link
+                to="/login"
+                className="btn-primary"
+                style={{ padding: '8px 16px', fontSize: '0.8125rem', textDecoration: 'none' }}
+              >
+                Get started
+              </Link>
+            </>
           )}
         </div>
 
-        {/* Mobile menu toggle */}
-        <div className="flex sm:hidden">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-[#141724] border border-[#272c3f] text-[#94a3b8] hover:text-white"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
+        {/* Mobile hamburger */}
+        <button
+          className="flex sm:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          style={{
+            padding: 8,
+            background: 'transparent',
+            border: '1px solid #26262e',
+            borderRadius: 8,
+            color: '#8a8a9a',
+            cursor: 'pointer',
+          }}
+        >
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden px-4 pt-3 pb-6 bg-[#0d0e15] border-b border-[#272c3f] space-y-4">
-          <div className="flex flex-col space-y-3 pt-2 text-sm text-[#94a3b8]">
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="py-1">Features</a>
-            <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="py-1">Architecture</a>
-            <a href="#templates" onClick={() => setMobileMenuOpen(false)} className="py-1">Templates</a>
-          </div>
-
-          <div className="pt-4 border-t border-[#272c3f]">
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div
+          style={{
+            padding: '12px 24px 24px',
+            borderBottom: '1px solid #1e1e26',
+            background: '#0a0a0b',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+          className="sm:hidden"
+        >
+          <a
+            href="#features"
+            onClick={() => setMobileOpen(false)}
+            style={{ color: '#8a8a9a', textDecoration: 'none', fontSize: '0.875rem', padding: '8px 0' }}
+          >
+            Features
+          </a>
+          <a
+            href="#demo"
+            onClick={() => setMobileOpen(false)}
+            style={{ color: '#8a8a9a', textDecoration: 'none', fontSize: '0.875rem', padding: '8px 0' }}
+          >
+            How it works
+          </a>
+          <div style={{ borderTop: '1px solid #1e1e26', marginTop: 8, paddingTop: 12 }}>
             {isAuthenticated ? (
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Link
                   to="/projects"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white bg-[#141724] border border-[#323850]"
+                  onClick={() => setMobileOpen(false)}
+                  className="btn-ghost"
+                  style={{ textDecoration: 'none', width: '100%' }}
                 >
-                  <FolderKanban className="w-4 h-4 text-[#8b5cf6]" />
-                  <span>Open Projects Dashboard</span>
+                  My Projects
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full py-2 text-center text-sm text-rose-400"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#f87171',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    padding: '8px 0',
+                    textAlign: 'center',
+                  }}
                 >
-                  Log Out
+                  Sign out
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="btn-primary-gradient w-full py-3 rounded-xl text-sm font-medium text-white flex items-center justify-center gap-2"
-                >
-                  <span>Continue with Google</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="btn-primary"
+                style={{ textDecoration: 'none', width: '100%' }}
+              >
+                Get started
+              </Link>
             )}
           </div>
         </div>
